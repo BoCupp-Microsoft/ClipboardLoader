@@ -2,11 +2,49 @@
 //
 
 #include <iostream>
+#include <fstream>
+
 #include <windows.h>
 
-int main()
+int main(int argc, char** argv)
 {
-    std::cout << "Hello World!\n";
+    if (argc != 3) {
+        std::cout << "Usage: clipload.exe \"Format Name\" filename.clip\n";
+    }
+    else {
+        std::cout << "arg0: " << argv[0] << "\n";
+        std::cout << "arg1: " << argv[1] << "\n";
+        std::cout << "arg2: " << argv[2] << "\n";
+    }
+
+    std::ifstream clipFile(argv[2], std::ios::in | std::ios::binary);
+    if (!clipFile.is_open()) {
+        return -1;
+    }
+    
+    // position the pointer to the end 
+    clipFile.seekg(0, std::ios::end);
+    size_t byteCount = clipFile.tellg();
+    
+    // Allocate kernel memory big enough for the file's content and a null terminator
+    HGLOBAL global = ::GlobalAlloc(GMEM_MOVEABLE, byteCount + 1);
+    if (!global) {
+        return -1;
+    }
+
+    // Lock memory and copy bytes, then unlock again
+    char* bytes = static_cast<char*>(::GlobalLock(global));
+    if (!bytes) {
+        return -1;
+    }
+
+    clipFile.seekg(0, std::ios::beg);
+    clipFile.read(bytes, byteCount);
+
+    bytes[byteCount] = '\0';
+
+    // Unlock the memory now that we've finished writing to it.
+    ::GlobalUnlock(global);
 
     // Open the clipboard (a prerequisite for subsequent operations below)
     if (!::OpenClipboard(nullptr)) {
@@ -19,30 +57,10 @@ int main()
     }
 
     // Get a unique number that represents the "HTML Format"
-    unsigned int htmlFormat = ::RegisterClipboardFormat(L"HTML Format");
+    unsigned int htmlFormat = ::RegisterClipboardFormatA(argv[1]);
     if (!htmlFormat) {
         return -1;
     }
-    
-    // Some test HTML content to put on the clipboard
-    const char* html = "testing!!!";
-
-    
-    // Allocate kernel memory big enough for the test content and a null terminator
-    size_t byteCount = strlen(html) + 1;
-    HGLOBAL global = ::GlobalAlloc(GMEM_MOVEABLE, byteCount);
-    if (!global) {
-        return -1;
-    }
-
-    // Lock memory and copy bytes, then unlock again
-    char* bytes = static_cast<char*>(::GlobalLock(global));
-    if (!bytes) {
-        return -1;
-    }
-
-    memcpy(bytes, html, byteCount);
-    ::GlobalUnlock(global);
 
     // Transfer ownership of global memory to clipboard
     if (!::SetClipboardData(htmlFormat, global)) {

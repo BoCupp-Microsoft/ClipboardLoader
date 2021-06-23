@@ -1,0 +1,21 @@
+Version:0.9
+StartHTML:71
+EndHTML:170
+StartFragment:140
+EndFragment:160
+StartSelection:140
+EndSelection:160
+<!DOCTYPE>
+<HTML>
+<HEAD>
+<TITLE> The HTML Clipboard</TITLE>
+<BASE HREF="https://sample/specs">
+</HEAD>
+<BODY>
+<UL>
+<!--StartFragment -->
+<LI> The Fragment </LI>
+<!--EndFragment -->
+</UL>
+</BODY>
+</HTML>
