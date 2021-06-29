@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 
+#include <string.h>
 #include <windows.h>
 
 int main(int argc, char** argv)
@@ -56,14 +57,23 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    // Get a unique number that represents the "HTML Format"
-    unsigned int htmlFormat = ::RegisterClipboardFormatA(argv[1]);
-    if (!htmlFormat) {
-        return -1;
+    unsigned int clipBoardFormat = 0;
+    if (!_strnicmp(argv[1], "text", 4)) {
+        // Special case for plain text--use system-defined format
+        // TODO: Support CF_UNICODETEXT
+        clipBoardFormat = CF_TEXT;
+    }
+    else {
+        // Get a unique number that represents the format (e.g. "HTML Format" or "PNG").
+        // The paste target must also recognize this format.
+        clipBoardFormat = ::RegisterClipboardFormatA(argv[1]);
+        if (!clipBoardFormat) {
+            return -1;
+        }
     }
 
     // Transfer ownership of global memory to clipboard
-    if (!::SetClipboardData(htmlFormat, global)) {
+    if (!::SetClipboardData(clipBoardFormat, global)) {
         return -1;
     }
 
